@@ -2,6 +2,13 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [1.0.5] - 2026-05-30
+
+### Changed
+- Manufacturer now shows **Bosch** (clean, no slash) in the Home app
+- Firmware version now reflects the installed plugin version (e.g. 1.0.5) instead of 0.0
+- Model correctly shows **Nefit Easy**
+
 ## [1.0.0] - 2026-05-30
 
 ### Added

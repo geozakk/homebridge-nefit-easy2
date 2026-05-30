@@ -11,6 +11,8 @@ import type {
 // Each factory returns a class instance when called as a function.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { NefitEasyClient } = require('bosch-xmpp');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const PLUGIN_VERSION: string = require('../package.json').version;
 
 interface NefitConfig extends AccessoryConfig {
   serialNumber: string;
@@ -72,9 +74,10 @@ export class NefitEasyAccessory implements AccessoryPlugin {
     this.log.info('Initializing BoschNefitEasy accessory...');
 
     this.informationService = new Service.AccessoryInformation()
-      .setCharacteristic(Characteristic.Manufacturer, 'Bosch / Nefit')
+      .setCharacteristic(Characteristic.Manufacturer, 'Bosch')
       .setCharacteristic(Characteristic.Model, 'Nefit Easy')
-      .setCharacteristic(Characteristic.SerialNumber, this.config.serialNumber ?? 'Unknown');
+      .setCharacteristic(Characteristic.SerialNumber, this.config.serialNumber ?? 'Unknown')
+      .setCharacteristic(Characteristic.FirmwareRevision, PLUGIN_VERSION);
 
     this.thermostatService = new Service.Thermostat(this.config.name);
 
