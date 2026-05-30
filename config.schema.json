@@ -10,25 +10,25 @@
         "type": "string",
         "required": true,
         "default": "Thermostat",
-        "description": "Name of the thermostat as it will appear in HomeKit."
+        "description": "Display name for the thermostat in HomeKit."
       },
       "serialNumber": {
         "title": "Serial Number",
         "type": "string",
         "required": true,
-        "description": "Nefit Easy serial number (found in the Nefit Easy app under Settings > About)."
+        "description": "Nefit Easy serial number — found in the Nefit Easy app under Settings > About."
       },
       "accessKey": {
         "title": "Access Key",
         "type": "string",
         "required": true,
-        "description": "Nefit Easy access key (found in the Nefit Easy app under Settings > About)."
+        "description": "Nefit Easy access key — found in the Nefit Easy app under Settings > About."
       },
       "password": {
         "title": "Password",
         "type": "string",
         "required": true,
-        "description": "Nefit Easy password (set during initial app setup)."
+        "description": "Password set during initial Nefit Easy app setup."
       },
       "pollingInterval": {
         "title": "Polling Interval (seconds)",
@@ -37,14 +37,62 @@
         "default": 60,
         "minimum": 10,
         "maximum": 600,
-        "description": "How often (in seconds) to poll the thermostat for updates. Default is 60 seconds."
+        "description": "How often to poll the thermostat for updates. Default: 60 seconds."
       },
       "debug": {
         "title": "Enable Debug Logging",
         "type": "boolean",
         "required": false,
         "default": false,
-        "description": "Log detailed debug information to the Homebridge log. Turn off in normal use."
+        "description": "Log detailed diagnostic information. Disable in normal use."
+      },
+      "features": {
+        "title": "Optional Features",
+        "type": "object",
+        "properties": {
+          "hotWater": {
+            "title": "Hot Water Switch",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "Adds a Switch tile to turn domestic hot water on or off directly from HomeKit."
+          },
+          "manualMode": {
+            "title": "Manual / Schedule Mode Switch",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "Adds a Switch tile to toggle between manual temperature control (on) and the thermostat's built-in weekly schedule (off)."
+          },
+          "holidayMode": {
+            "title": "Holiday Mode Indicator",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "Adds a read-only Switch tile that shows whether Holiday Mode is active on the thermostat. Cannot be toggled from HomeKit — set it on the thermostat or app directly."
+          },
+          "awayMode": {
+            "title": "Home / Away Occupancy Sensor",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "Adds an Occupancy Sensor that shows whether the thermostat considers the home occupied or away. Useful for HomeKit automations."
+          },
+          "outdoorTemperature": {
+            "title": "Outdoor Temperature Sensor",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "Adds a read-only Temperature Sensor showing the outdoor temperature. Requires an outdoor sensor connected to the thermostat."
+          },
+          "hotWaterTemperature": {
+            "title": "Hot Water Temperature Sensor",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "Adds a read-only Temperature Sensor showing the current hot water tank temperature."
+          }
+        }
       }
     }
   },
@@ -53,6 +101,20 @@
       "type": "fieldset",
       "title": "Thermostat Identity",
       "items": ["name", "serialNumber", "accessKey", "password"]
+    },
+    {
+      "type": "fieldset",
+      "title": "Optional Features",
+      "description": "Each feature adds a separate tile in the Home app. Enable only what you need.",
+      "expandable": true,
+      "items": [
+        "features.hotWater",
+        "features.manualMode",
+        "features.holidayMode",
+        "features.awayMode",
+        "features.outdoorTemperature",
+        "features.hotWaterTemperature"
+      ]
     },
     {
       "type": "fieldset",

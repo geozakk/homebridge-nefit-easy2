@@ -2,6 +2,17 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [1.0.8] - 2026-05-30
+
+### Added
+- **Hot Water Switch** — toggle domestic hot water on/off from HomeKit
+- **Manual / Schedule Mode Switch** — switch between manual temperature control and the thermostat's built-in weekly schedule
+- **Holiday Mode Indicator** — read-only switch showing whether Holiday Mode is active on the thermostat
+- **Home / Away Occupancy Sensor** — shows whether the thermostat considers the home occupied or away; useful for automations
+- **Outdoor Temperature Sensor** — displays outdoor temperature (requires an outdoor sensor connected to the thermostat)
+- **Hot Water Temperature Sensor** — displays the current hot water tank temperature
+- All new features are **opt-in** — each can be individually enabled in the plugin settings under **Optional Features**
+
 ## [1.0.7] - 2026-05-30
 
 ### Changed
