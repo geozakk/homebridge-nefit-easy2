@@ -1,0 +1,57 @@
+{
+  "pluginAlias": "NefitEasy2",
+  "pluginType": "accessory",
+  "singular": false,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "required": true,
+        "default": "Thermostat",
+        "description": "Name of the thermostat as it will appear in HomeKit."
+      },
+      "serialNumber": {
+        "title": "Serial Number",
+        "type": "string",
+        "required": true,
+        "description": "Nefit Easy serial number (found in the Nefit Easy app under Settings > About)."
+      },
+      "accessKey": {
+        "title": "Access Key",
+        "type": "string",
+        "required": true,
+        "description": "Nefit Easy access key (found in the Nefit Easy app under Settings > About)."
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "required": true,
+        "description": "Nefit Easy password (set during initial app setup)."
+      },
+      "pollingInterval": {
+        "title": "Polling Interval (seconds)",
+        "type": "integer",
+        "required": false,
+        "default": 60,
+        "minimum": 10,
+        "maximum": 600,
+        "description": "How often (in seconds) to poll the thermostat for updates. Default is 60 seconds."
+      }
+    }
+  },
+  "layout": [
+    {
+      "type": "fieldset",
+      "title": "Thermostat Identity",
+      "items": ["name", "serialNumber", "accessKey", "password"]
+    },
+    {
+      "type": "fieldset",
+      "title": "Advanced",
+      "expandable": true,
+      "items": ["pollingInterval"]
+    }
+  ]
+}
