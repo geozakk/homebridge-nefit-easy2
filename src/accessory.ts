@@ -509,91 +509,27 @@ export class NefitEasyAccessory implements AccessoryPlugin {
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
-  // Different Nefit Easy firmware versions use different endpoints — try each in order.
-  private static readonly TEMP_ENDPOINTS = [
-    '/heatingCircuits/hc1/temperatureRoomManual',
-    '/heatingCircuits/hc1/manualTempOverride/setpoint',
-    '/heatingCircuits/hc1/temperatureManual',
-  ];
-
-  // Endpoints that switch the thermostat from schedule to manual control mode.
-  private static readonly MODE_ENDPOINTS = [
-    '/heatingCircuits/hc1/usermode',
-    '/heatingCircuits/hc1/operationMode',
-  ];
-
-  private async ensureManualMode(): Promise<void> {
-    if (this.manualModeActive) {
-      this.dbg('Already in manual mode — skipping mode switch');
-      return;
-    }
-    this.log.info('Thermostat is in schedule mode — switching to manual mode before setting temperature');
-    for (const endpoint of NefitEasyAccessory.MODE_ENDPOINTS) {
-      try {
-        this.dbg(`PUT ${endpoint} {"value":"manual"}`);
-        await this.client!.put(endpoint, { value: 'manual' });
-        this.manualModeActive = true;
-        this.log.info(`Switched to manual mode via ${endpoint}`);
-        if (this.feat.manualMode && this.manualModeService) {
-          this.manualModeService
-            .getCharacteristic(this.api.hap.Characteristic.On)
-            .updateValue(true);
-        }
-        return;
-      } catch (err) {
-        const e = err as Error & { response?: { statusCode?: number } };
-        this.log.warn(`Mode switch via ${endpoint} failed: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'}) — trying next`);
-      }
-    }
-    this.log.warn('Could not switch to manual mode — will still attempt temperature write');
-  }
-
   private async handleSetTargetTemperature(value: CharacteristicValue): Promise<void> {
     const temp = value as number;
     this.log.info(`Setting target temperature to ${temp}°C`);
     if (!this.connected || !this.client) {
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
-
-    await this.ensureManualMode();
-
-    for (const endpoint of NefitEasyAccessory.TEMP_ENDPOINTS) {
-      // Probe GET to confirm endpoint exists and learn value format
-      let probeValue: string | number | undefined;
-      try {
-        this.dbg(`Probing GET ${endpoint}…`);
-        const probe = await this.client.get(endpoint);
-        this.dbg(`Probe result: ${JSON.stringify(probe)}`);
-        probeValue = probe?.value;
-      } catch (probeErr) {
-        const e = probeErr as Error & { response?: { statusCode?: number } };
-        this.dbg(`GET ${endpoint} failed: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'}) — trying next`);
-        continue;
-      }
-
-      // Mirror the exact value type the device returned (string vs number).
-      // Also try string format as fallback if numeric is rejected.
-      const numericPayload = typeof probeValue === 'string' ? { value: temp.toFixed(1) } : { value: temp };
-      const stringPayload  = { value: temp.toFixed(1) };
-
-      for (const payload of [numericPayload, stringPayload]) {
-        try {
-          this.dbg(`PUT ${endpoint} ${JSON.stringify(payload)}`);
-          await this.client.put(endpoint, payload);
-          this.targetTemperature = temp;
-          this.log.info(`Target temperature set to ${temp}°C via ${endpoint}`);
-          return;
-        } catch (putErr) {
-          const e = putErr as Error & { response?: { statusCode?: number; body?: unknown } };
-          this.dbg(`PUT ${endpoint} ${JSON.stringify(payload)} failed: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'})`);
-          this.dbg(`Response body: ${JSON.stringify(e.response?.body)}`);
-        }
-      }
-      this.log.warn(`PUT ${endpoint} failed with both value formats — trying next endpoint`);
+    const data = { value: temp };
+    this.dbg(`PUT temperatureRoomManual + manualTempOverride/status + manualTempOverride/temperature ${JSON.stringify(data)}`);
+    try {
+      await Promise.all([
+        this.client.put('/heatingCircuits/hc1/temperatureRoomManual',          data),
+        this.client.put('/heatingCircuits/hc1/manualTempOverride/status',      { value: 'on' }),
+        this.client.put('/heatingCircuits/hc1/manualTempOverride/temperature', data),
+      ]);
+      this.targetTemperature = temp;
+      this.log.info(`Target temperature set to ${temp}°C`);
+    } catch (err) {
+      const e = err as Error & { response?: { statusCode?: number } };
+      this.log.error(`Failed to set temperature: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'})`);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
-
-    this.log.error('Failed to set temperature — all endpoints exhausted. Enable debug logging and share the output for diagnosis.');
-    throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
   }
 
   private async handleSetTargetHeatingState(value: CharacteristicValue): Promise<void> {
@@ -615,16 +551,21 @@ export class NefitEasyAccessory implements AccessoryPlugin {
   private async handleSetHotWater(value: CharacteristicValue): Promise<void> {
     const on = value as boolean;
     this.log.info(`Setting hot water: ${on ? 'on' : 'off'}`);
-    this.dbg(`PUT /dhwCircuits/dhw1/operationMode { value: "${on ? 'on' : 'off'}" }`);
     if (!this.connected || !this.client) {
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
+    // Endpoint depends on current user mode (clock vs manual).
+    const endpoint = this.manualModeActive
+      ? '/dhwCircuits/dhwA/dhwOperationManualMode'
+      : '/dhwCircuits/dhwA/dhwOperationClockMode';
+    this.dbg(`PUT ${endpoint} {"value":"${on ? 'on' : 'off'}"}`);
     try {
-      await this.client.put('/dhwCircuits/dhw1/operationMode', { value: on ? 'on' : 'off' });
+      await this.client.put(endpoint, { value: on ? 'on' : 'off' });
       this.hotWaterActive = on;
       this.log.info(`Hot water set to ${on ? 'on' : 'off'}`);
     } catch (err) {
-      this.log.error(`Failed to set hot water: ${(err as Error).message}`);
+      const e = err as Error & { response?: { statusCode?: number } };
+      this.log.error(`Failed to set hot water: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'})`);
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
   }
@@ -633,16 +574,17 @@ export class NefitEasyAccessory implements AccessoryPlugin {
     const manual = value as boolean;
     const mode = manual ? 'manual' : 'clock';
     this.log.info(`Setting heating mode to: ${mode}`);
-    this.dbg(`PUT /heatingCircuits/hc1/operationMode { value: "${mode}" }`);
     if (!this.connected || !this.client) {
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
+    this.dbg(`PUT /heatingCircuits/hc1/usermode {"value":"${mode}"}`);
     try {
-      await this.client.put('/heatingCircuits/hc1/operationMode', { value: mode });
+      await this.client.put('/heatingCircuits/hc1/usermode', { value: mode });
       this.manualModeActive = manual;
       this.log.info(`Heating mode set to ${mode}`);
     } catch (err) {
-      this.log.error(`Failed to set heating mode: ${(err as Error).message}`);
+      const e = err as Error & { response?: { statusCode?: number } };
+      this.log.error(`Failed to set heating mode: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'})`);
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
   }

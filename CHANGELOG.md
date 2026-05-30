@@ -2,6 +2,13 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.0.5] - 2026-05-30
+
+### Fixed
+- Temperature SET now sends all three required PUTs in parallel (`temperatureRoomManual`, `manualTempOverride/status=on`, `manualTempOverride/temperature`) — the override endpoints are what makes the change stick in both clock and manual mode; sending only `temperatureRoomManual` alone always returned HTTP 400
+- Hot water switch now uses the correct endpoint path (`/dhwCircuits/dhwA/dhwOperationClockMode` or `dhwOperationManualMode` depending on current mode) — previous path `/dhwCircuits/dhw1/operationMode` does not exist on the device
+- Manual mode switch now uses the correct endpoint `/heatingCircuits/hc1/usermode` — previous endpoint `operationMode` was wrong
+
 ## [2.0.4] - 2026-05-30
 
 ### Fixed
