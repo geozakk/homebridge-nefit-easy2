@@ -2,6 +2,11 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [1.0.7] - 2026-05-30
+
+### Changed
+- `TargetHeatingCoolingState` now reflects actual need: shows **Off** when the room is at or above the setpoint, and **Heat** only when the room needs warming. Fixes the misleading "Heat to 15°" display when the room is already warmer than the setpoint.
+
 ## [1.0.6] - 2026-05-30
 
 ### Fixed

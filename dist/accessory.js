@@ -190,17 +190,29 @@ class NefitEasyAccessory {
         else {
             this.log.warn(`Unexpected TSP (temp-setpoint) value: ${v.TSP}`);
         }
-        const newHeatingState = burnerActive
+        // CurrentHeatingCoolingState: reflects whether the boiler is actually firing
+        const newCurrentState = burnerActive
             ? Characteristic.CurrentHeatingCoolingState.HEAT
             : Characteristic.CurrentHeatingCoolingState.OFF;
-        if (newHeatingState !== this.currentHeatingState) {
-            this.dbg(`Heating state changed: ${this.currentHeatingState} → ${newHeatingState}`);
-            this.currentHeatingState = newHeatingState;
+        if (newCurrentState !== this.currentHeatingState) {
+            this.dbg(`CurrentHeatingState changed: ${this.currentHeatingState} → ${newCurrentState}`);
+            this.currentHeatingState = newCurrentState;
             this.thermostatService
                 .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
                 .updateValue(this.currentHeatingState);
         }
-        this.log.info(`Status — current: ${inHouseTemp}°C, setpoint: ${setpoint}°C, burner: ${burnerActive} (BAI=${v.BAI})`);
+        // TargetHeatingCoolingState: Heat when room needs warming, Off when already at/above setpoint
+        const newTargetState = (!Number.isNaN(inHouseTemp) && !Number.isNaN(setpoint) && inHouseTemp < setpoint)
+            ? Characteristic.TargetHeatingCoolingState.HEAT
+            : Characteristic.TargetHeatingCoolingState.OFF;
+        if (newTargetState !== this.targetHeatingState) {
+            this.dbg(`TargetHeatingState changed: ${this.targetHeatingState} → ${newTargetState}`);
+            this.targetHeatingState = newTargetState;
+            this.thermostatService
+                .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+                .updateValue(this.targetHeatingState);
+        }
+        this.log.info(`Status — current: ${inHouseTemp}°C, setpoint: ${setpoint}°C, burner: ${burnerActive} (BAI=${v.BAI}), target mode: ${newTargetState === 1 ? 'Heat' : 'Off'}`);
     }
     async handleSetTargetTemperature(value) {
         const temp = value;
