@@ -269,11 +269,17 @@ export class NefitEasyAccessory implements AccessoryPlugin {
 
   private createClient() {
     this.dbg('Creating NefitEasyClient instance via factory function');
-    return NefitEasyClient({
+    const c = NefitEasyClient({
       serialNumber: this.config.serialNumber,
       accessKey:    this.config.accessKey,
       password:     this.config.password,
     });
+    // bosch-xmpp joins PUT body lines with this.LINE_SEPARATOR (defaults to '\n').
+    // NefitEasyClient.buildMessage encodes \r as &#13;\n in the XMPP XML stanza,
+    // which the Bosch backend decodes back to \r\n — proper HTTP/1.1 line endings.
+    // Without this, PUT bodies use bare \n and the device returns HTTP 400.
+    c.LINE_SEPARATOR = '\r';
+    return c;
   }
 
   private async connect(): Promise<void> {

@@ -2,6 +2,11 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.0.6] - 2026-05-30
+
+### Fixed
+- **Root cause of all PUT failures identified and fixed**: `bosch-xmpp` joins PUT request headers with `\n` by default; the Bosch device accepts `\n` for GET but requires strict `\r\n` line endings for PUT and returns HTTP 400 otherwise. Setting `LINE_SEPARATOR = '\r'` on the client causes `buildMessage` to encode them as `&#13;\n` in the XMPP XML stanza — which the backend decodes back to proper `\r\n`. This matches the behaviour of the original `nefit-easy-core` library that the device was designed around.
+
 ## [2.0.5] - 2026-05-30
 
 ### Fixed
