@@ -1,4 +1,4 @@
-# homebridge-nefit-easy2
+# homebridge-bosch-nefit-easy
 
 Homebridge accessory plugin for the **Nefit Easy** (Bosch EasyControl) thermostat.
 
@@ -12,10 +12,10 @@ This plugin replaces the deprecated `homebridge-nefit-easy` which is broken on N
 ## Installation
 
 ```bash
-npm install -g homebridge-nefit-easy2
+npm install -g homebridge-bosch-nefit-easy
 ```
 
-Or install via the [Homebridge UI](https://github.com/homebridge/homebridge-config-ui-x) by searching for **homebridge-nefit-easy2**.
+Or install via the [Homebridge UI](https://github.com/homebridge/homebridge-config-ui-x) by searching for **homebridge-bosch-nefit-easy**.
 
 ## Configuration
 
@@ -25,7 +25,7 @@ Add an accessory entry to your Homebridge `config.json`:
 {
   "accessories": [
     {
-      "accessory": "NefitEasy2",
+      "accessory": "BoschNefitEasy",
       "name": "Thermostat",
       "serialNumber": "NEFIT_SERIAL_NUMBER",
       "accessKey": "NEFIT_ACCESS_KEY",
@@ -77,8 +77,8 @@ The plugin exposes a single **Thermostat** service:
 ## Migrating from homebridge-nefit-easy
 
 1. Remove the old plugin: `npm uninstall -g homebridge-nefit-easy`
-2. Install this plugin: `npm install -g homebridge-nefit-easy2`
-3. Change `"accessory": "NefitEasy"` → `"accessory": "NefitEasy2"` in your config
+2. Install this plugin: `npm install -g homebridge-bosch-nefit-easy`
+3. Change `"accessory": "NefitEasy"` → `"accessory": "BoschNefitEasy"` in your config
 4. Restart Homebridge
 
 Your credentials (serial number, access key, password) are the same.
