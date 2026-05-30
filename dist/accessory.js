@@ -85,9 +85,7 @@ class NefitEasyAccessory {
             .setProps({ validValues: [Characteristic.TargetHeatingCoolingState.AUTO] })
             .onGet(() => Characteristic.TargetHeatingCoolingState.AUTO)
             .onSet(() => {
-            this.thermostatService
-                .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-                .updateValue(Characteristic.TargetHeatingCoolingState.AUTO);
+            throw new this.api.hap.HapStatusError(-70404 /* this.api.hap.HAPStatus.READ_ONLY_CHARACTERISTIC */);
         });
         this.thermostatService
             .getCharacteristic(Characteristic.TemperatureDisplayUnits)

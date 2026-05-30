@@ -2,6 +2,11 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.1.1] - 2026-05-30
+
+### Fixed
+- `TargetHeatingCoolingState` SET now throws `READ_ONLY_CHARACTERISTIC` — the correct HAP response that tells HomeKit the mode cannot be changed, rather than accepting the SET and pushing back which caused the bounce-to-Off behaviour
+
 ## [2.1.0] - 2026-05-30
 
 ### Changed
