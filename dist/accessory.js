@@ -164,10 +164,11 @@ class NefitEasyAccessory {
     }
     applyStatus(status) {
         const { Characteristic } = this.api.hap;
-        const inHouseTemp = Number(status['in-house-temp']);
-        const setpoint = Number(status['temp-setpoint']);
-        const burnerActive = status['boiler-indicator'] === 'CH';
-        this.dbg(`Parsed — inHouseTemp: ${inHouseTemp}, setpoint: ${setpoint}, burnerActive: ${burnerActive}`);
+        const v = status.value;
+        const inHouseTemp = Number(v.IHT);
+        const setpoint = Number(v.TSP);
+        const burnerActive = v.BAI !== 'No' && v.BAI !== '' && v.BAI !== undefined;
+        this.dbg(`Parsed — IHT: ${v.IHT} => ${inHouseTemp}, TSP: ${v.TSP} => ${setpoint}, BAI: ${v.BAI} => burnerActive: ${burnerActive}`);
         if (!Number.isNaN(inHouseTemp)) {
             this.currentTemperature = inHouseTemp;
             this.thermostatService
@@ -175,7 +176,7 @@ class NefitEasyAccessory {
                 .updateValue(this.currentTemperature);
         }
         else {
-            this.log.warn(`Unexpected in-house-temp value: ${status['in-house-temp']}`);
+            this.log.warn(`Unexpected IHT (in-house-temp) value: ${v.IHT}`);
         }
         if (!Number.isNaN(setpoint)) {
             this.targetTemperature = setpoint;
@@ -184,7 +185,7 @@ class NefitEasyAccessory {
                 .updateValue(this.targetTemperature);
         }
         else {
-            this.log.warn(`Unexpected temp-setpoint value: ${status['temp-setpoint']}`);
+            this.log.warn(`Unexpected TSP (temp-setpoint) value: ${v.TSP}`);
         }
         const newHeatingState = burnerActive
             ? Characteristic.CurrentHeatingCoolingState.HEAT
@@ -196,7 +197,7 @@ class NefitEasyAccessory {
                 .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
                 .updateValue(this.currentHeatingState);
         }
-        this.log.info(`Status — current: ${inHouseTemp}°C, setpoint: ${setpoint}°C, burner: ${burnerActive}`);
+        this.log.info(`Status — current: ${inHouseTemp}°C, setpoint: ${setpoint}°C, burner: ${burnerActive} (BAI=${v.BAI})`);
     }
     async handleSetTargetTemperature(value) {
         const temp = value;
