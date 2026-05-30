@@ -18,8 +18,16 @@
     "xmpp",
     "nefit-easy"
   ],
-  "author": "",
+  "author": "Codzelerate <hello@codzelerate.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geozakk/homebridge-bosch-nefit-easy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/geozakk/homebridge-bosch-nefit-easy/issues"
+  },
+  "homepage": "https://github.com/geozakk/homebridge-bosch-nefit-easy#readme",
   "engines": {
     "homebridge": "^2.0.0",
     "node": "^22 || ^24"

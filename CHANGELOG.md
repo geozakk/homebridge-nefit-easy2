@@ -2,6 +2,12 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [1.0.6] - 2026-05-30
+
+### Fixed
+- Added `repository`, `bugs`, and `homepage` fields to `package.json` so the Homebridge UI can retrieve the changelog and release notes from GitHub correctly
+- Added `author` field (Codzelerate)
+
 ## [1.0.5] - 2026-05-30
 
 ### Changed
