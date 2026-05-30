@@ -37,7 +37,8 @@
   },
   "files": [
     "dist",
-    "config.schema.json"
+    "config.schema.json",
+    "CHANGELOG.md"
   ],
   "bundledDependencies": [
     "bosch-xmpp"
