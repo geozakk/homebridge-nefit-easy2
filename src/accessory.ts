@@ -518,16 +518,27 @@ export class NefitEasyAccessory implements AccessoryPlugin {
   private async handleSetTargetTemperature(value: CharacteristicValue): Promise<void> {
     const temp = value as number;
     this.log.info(`Setting target temperature to ${temp}°C`);
-    this.dbg(`PUT /heatingCircuits/hc1/temperatureRoomManual { value: ${temp} }`);
     if (!this.connected || !this.client) {
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
     try {
-      await this.client.put('/heatingCircuits/hc1/temperatureRoomManual', { value: temp });
+      // First probe the endpoint to confirm it exists and check its current format
+      this.dbg('GET /heatingCircuits/hc1/temperatureRoomManual to probe endpoint…');
+      const current = await this.client.get('/heatingCircuits/hc1/temperatureRoomManual');
+      this.dbg(`Probe response: ${JSON.stringify(current)}`);
+
+      // Mirror the exact value format the device returned (string vs number)
+      const payload = typeof current?.value === 'string'
+        ? { value: temp.toFixed(1) }
+        : { value: temp };
+
+      this.dbg(`PUT /heatingCircuits/hc1/temperatureRoomManual ${JSON.stringify(payload)}`);
+      await this.client.put('/heatingCircuits/hc1/temperatureRoomManual', payload);
       this.targetTemperature = temp;
       this.log.info(`Target temperature set to ${temp}°C`);
     } catch (err) {
-      this.log.error(`Failed to set temperature: ${(err as Error).message}`);
+      const e = err as Error & { response?: { statusCode?: number; body?: unknown } };
+      this.log.error(`Failed to set temperature: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'}) body: ${JSON.stringify(e.response?.body)}`);
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
   }
