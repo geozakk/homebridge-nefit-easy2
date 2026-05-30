@@ -2,6 +2,13 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.1.0] - 2026-05-30
+
+### Changed
+- `TargetHeatingCoolingState` reverted to **Auto**, matching the behaviour of the original `homebridge-nefit-easy` reference plugin — the mode picker is greyed out (non-interactive) in the Home app and the temperature wheel remains always accessible
+- `onSet` now corrects back to Auto synchronously (no `setTimeout`) so there is no flash or race condition
+- Every poll pushes Auto to clear any stale cached state HomeKit may hold from earlier plugin versions
+
 ## [2.0.9] - 2026-05-30
 
 ### Fixed

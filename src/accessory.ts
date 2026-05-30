@@ -149,13 +149,12 @@ export class NefitEasyAccessory implements AccessoryPlugin {
 
     this.thermostatService
       .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-      .setProps({ validValues: [0, 1] })
-      .onGet(() => Characteristic.TargetHeatingCoolingState.HEAT)
+      .setProps({ validValues: [Characteristic.TargetHeatingCoolingState.AUTO] })
+      .onGet(() => Characteristic.TargetHeatingCoolingState.AUTO)
       .onSet(() => {
-        // The Nefit Easy has no true off — always correct back to HEAT immediately.
         this.thermostatService
           .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-          .updateValue(Characteristic.TargetHeatingCoolingState.HEAT);
+          .updateValue(Characteristic.TargetHeatingCoolingState.AUTO);
       });
 
     this.thermostatService
@@ -440,10 +439,10 @@ export class NefitEasyAccessory implements AccessoryPlugin {
         .updateValue(newCurrentState);
     }
 
-    // Always keep TargetHeatingCoolingState = HEAT so the temperature wheel stays active.
+    // Always push AUTO so any cached Off/Heat state in HomeKit gets corrected each poll.
     this.thermostatService
       .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-      .updateValue(Characteristic.TargetHeatingCoolingState.HEAT);
+      .updateValue(Characteristic.TargetHeatingCoolingState.AUTO);
 
     this.dbg(`BAI=${v.BAI}, burnerOn=${burnerOn}`);
 
