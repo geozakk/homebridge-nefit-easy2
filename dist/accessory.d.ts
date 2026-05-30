@@ -20,7 +20,6 @@ export declare class NefitEasyAccessory implements AccessoryPlugin {
     private currentTemperature;
     private targetTemperature;
     private currentHeatingState;
-    private targetHeatingState;
     private hotWaterActive;
     private manualModeActive;
     private holidayModeActive;
@@ -39,7 +38,6 @@ export declare class NefitEasyAccessory implements AccessoryPlugin {
     private pollHotWaterTemperature;
     private applyUiStatus;
     private handleSetTargetTemperature;
-    private handleSetTargetHeatingState;
     private handleSetHotWater;
     private handleSetManualMode;
     private dbg;

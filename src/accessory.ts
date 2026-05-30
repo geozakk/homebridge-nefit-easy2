@@ -94,7 +94,6 @@ export class NefitEasyAccessory implements AccessoryPlugin {
   private currentTemperature    = 20;
   private targetTemperature     = 20;
   private currentHeatingState   = 0;
-  private targetHeatingState    = 1;
   private hotWaterActive        = false;
   private manualModeActive      = false;
   private holidayModeActive     = false;
@@ -150,12 +149,9 @@ export class NefitEasyAccessory implements AccessoryPlugin {
 
     this.thermostatService
       .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-      .setProps({ validValues: [0, 1] })
-      .onGet(() => {
-        this.dbg(`GET TargetHeatingCoolingState => ${this.targetHeatingState}`);
-        return this.targetHeatingState;
-      })
-      .onSet((value) => this.handleSetTargetHeatingState(value));
+      .setProps({ validValues: [Characteristic.TargetHeatingCoolingState.AUTO] })
+      .onGet(() => Characteristic.TargetHeatingCoolingState.AUTO)
+      .onSet(() => { /* read-only — thermostat always manages heating automatically */ });
 
     this.thermostatService
       .getCharacteristic(Characteristic.TemperatureDisplayUnits)
@@ -439,19 +435,7 @@ export class NefitEasyAccessory implements AccessoryPlugin {
         .updateValue(newCurrentState);
     }
 
-    // TargetHeatingCoolingState — Off when room >= setpoint, Heat when room needs warming
-    const newTargetState = (!Number.isNaN(inHouseTemp) && !Number.isNaN(setpoint) && inHouseTemp < setpoint)
-      ? Characteristic.TargetHeatingCoolingState.HEAT
-      : Characteristic.TargetHeatingCoolingState.OFF;
-
-    if (newTargetState !== this.targetHeatingState) {
-      this.targetHeatingState = newTargetState;
-      this.thermostatService
-        .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-        .updateValue(newTargetState);
-    }
-
-    this.dbg(`BAI=${v.BAI}, burnerOn=${burnerOn}, targetMode=${newTargetState === 1 ? 'Heat' : 'Off'}`);
+    this.dbg(`BAI=${v.BAI}, burnerOn=${burnerOn}`);
 
     const statusChanged =
       inHouseTemp !== this.currentTemperature ||
@@ -536,22 +520,6 @@ export class NefitEasyAccessory implements AccessoryPlugin {
       this.log.error(`Failed to set temperature: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'})`);
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
-  }
-
-  private async handleSetTargetHeatingState(value: CharacteristicValue): Promise<void> {
-    const { Characteristic } = this.api.hap;
-    const state = value as number;
-    this.dbg(`SET TargetHeatingCoolingState => ${state}`);
-    if (state === Characteristic.TargetHeatingCoolingState.OFF) {
-      this.log.info('Heating set to OFF — setting temperature to minimum (5°C)');
-      await this.handleSetTargetTemperature(MIN_TEMP);
-    } else {
-      this.log.info('Heating set to HEAT');
-    }
-    this.targetHeatingState = state;
-    this.thermostatService
-      .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-      .updateValue(this.targetHeatingState);
   }
 
   private async handleSetHotWater(value: CharacteristicValue): Promise<void> {

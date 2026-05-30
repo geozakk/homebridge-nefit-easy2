@@ -2,6 +2,11 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.0.7] - 2026-05-30
+
+### Changed
+- `TargetHeatingCoolingState` is now locked to **Auto** — the Nefit Easy always manages heating automatically based on the setpoint; exposing Off/Heat as toggleable states was misleading because the thermostat has no true off command and the Home app label "Heat to 15°" when the room is already warm confused users
+
 ## [2.0.6] - 2026-05-30
 
 ### Fixed
