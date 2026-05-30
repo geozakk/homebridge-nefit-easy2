@@ -2,6 +2,13 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.0.4] - 2026-05-30
+
+### Fixed
+- Temperature SET now automatically switches the thermostat from schedule mode to manual mode before writing the setpoint — fixes HTTP 400 rejections on devices running in clock/schedule mode
+- `UMD` (user mode) is now always tracked from uiStatus regardless of whether the Manual Mode feature flag is enabled, so the mode switch logic has accurate state on first use
+- Each temperature PUT now also retries with a string-formatted value (`"17.0"`) if the numeric form is rejected, covering devices whose JSON parser requires a decimal point
+
 ## [2.0.3] - 2026-05-30
 
 ### Fixed

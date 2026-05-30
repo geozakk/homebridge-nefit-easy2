@@ -469,15 +469,14 @@ export class NefitEasyAccessory implements AccessoryPlugin {
     }
 
     // ── Manual Mode ───────────────────────────────────────────────────────────
+    // Always track UMD so handleSetTargetTemperature knows the current mode.
+    const manual = v.UMD === 'manual';
+    this.manualModeActive = manual;
     if (this.feat.manualMode && this.manualModeService) {
-      const manual = v.UMD === 'manual';
-      if (manual !== this.manualModeActive) {
-        this.manualModeActive = manual;
-        this.manualModeService
-          .getCharacteristic(Characteristic.On)
-          .updateValue(manual);
-        this.dbg(`Manual mode updated: ${manual}`);
-      }
+      this.manualModeService
+        .getCharacteristic(Characteristic.On)
+        .updateValue(manual);
+      this.dbg(`Manual mode updated: ${manual}`);
     }
 
     // ── Holiday Mode ──────────────────────────────────────────────────────────
@@ -517,12 +516,46 @@ export class NefitEasyAccessory implements AccessoryPlugin {
     '/heatingCircuits/hc1/temperatureManual',
   ];
 
+  // Endpoints that switch the thermostat from schedule to manual control mode.
+  private static readonly MODE_ENDPOINTS = [
+    '/heatingCircuits/hc1/usermode',
+    '/heatingCircuits/hc1/operationMode',
+  ];
+
+  private async ensureManualMode(): Promise<void> {
+    if (this.manualModeActive) {
+      this.dbg('Already in manual mode — skipping mode switch');
+      return;
+    }
+    this.log.info('Thermostat is in schedule mode — switching to manual mode before setting temperature');
+    for (const endpoint of NefitEasyAccessory.MODE_ENDPOINTS) {
+      try {
+        this.dbg(`PUT ${endpoint} {"value":"manual"}`);
+        await this.client!.put(endpoint, { value: 'manual' });
+        this.manualModeActive = true;
+        this.log.info(`Switched to manual mode via ${endpoint}`);
+        if (this.feat.manualMode && this.manualModeService) {
+          this.manualModeService
+            .getCharacteristic(this.api.hap.Characteristic.On)
+            .updateValue(true);
+        }
+        return;
+      } catch (err) {
+        const e = err as Error & { response?: { statusCode?: number } };
+        this.log.warn(`Mode switch via ${endpoint} failed: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'}) — trying next`);
+      }
+    }
+    this.log.warn('Could not switch to manual mode — will still attempt temperature write');
+  }
+
   private async handleSetTargetTemperature(value: CharacteristicValue): Promise<void> {
     const temp = value as number;
     this.log.info(`Setting target temperature to ${temp}°C`);
     if (!this.connected || !this.client) {
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
+
+    await this.ensureManualMode();
 
     for (const endpoint of NefitEasyAccessory.TEMP_ENDPOINTS) {
       // Probe GET to confirm endpoint exists and learn value format
@@ -538,22 +571,25 @@ export class NefitEasyAccessory implements AccessoryPlugin {
         continue;
       }
 
-      // Mirror the exact value type the device returned (string vs number)
-      const payload = typeof probeValue === 'string'
-        ? { value: temp.toFixed(1) }
-        : { value: temp };
+      // Mirror the exact value type the device returned (string vs number).
+      // Also try string format as fallback if numeric is rejected.
+      const numericPayload = typeof probeValue === 'string' ? { value: temp.toFixed(1) } : { value: temp };
+      const stringPayload  = { value: temp.toFixed(1) };
 
-      try {
-        this.dbg(`PUT ${endpoint} ${JSON.stringify(payload)}`);
-        await this.client.put(endpoint, payload);
-        this.targetTemperature = temp;
-        this.log.info(`Target temperature set to ${temp}°C via ${endpoint}`);
-        return;
-      } catch (putErr) {
-        const e = putErr as Error & { response?: { statusCode?: number; body?: unknown } };
-        this.log.warn(`PUT ${endpoint} failed: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'}) — trying next`);
-        this.dbg(`Response body: ${JSON.stringify(e.response?.body)}`);
+      for (const payload of [numericPayload, stringPayload]) {
+        try {
+          this.dbg(`PUT ${endpoint} ${JSON.stringify(payload)}`);
+          await this.client.put(endpoint, payload);
+          this.targetTemperature = temp;
+          this.log.info(`Target temperature set to ${temp}°C via ${endpoint}`);
+          return;
+        } catch (putErr) {
+          const e = putErr as Error & { response?: { statusCode?: number; body?: unknown } };
+          this.dbg(`PUT ${endpoint} ${JSON.stringify(payload)} failed: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'})`);
+          this.dbg(`Response body: ${JSON.stringify(e.response?.body)}`);
+        }
       }
+      this.log.warn(`PUT ${endpoint} failed with both value formats — trying next endpoint`);
     }
 
     this.log.error('Failed to set temperature — all endpoints exhausted. Enable debug logging and share the output for diagnosis.');

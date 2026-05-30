@@ -39,6 +39,8 @@ export declare class NefitEasyAccessory implements AccessoryPlugin {
     private pollHotWaterTemperature;
     private applyUiStatus;
     private static readonly TEMP_ENDPOINTS;
+    private static readonly MODE_ENDPOINTS;
+    private ensureManualMode;
     private handleSetTargetTemperature;
     private handleSetTargetHeatingState;
     private handleSetHotWater;
