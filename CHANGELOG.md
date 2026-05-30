@@ -7,6 +7,10 @@ All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 ### Fixed
 - Status line now only logs when temperature, setpoint, or burner state actually changes — eliminates repetitive log noise during stable conditions
 - Removed internal `BAI` field from normal log output; it now appears only when debug logging is enabled
+- Hot Water switch no longer shows incorrect initial state before the first poll completes
+- Hot Water switch now snaps back to correct state if the PUT fails, rather than staying in the wrong position
+- Hot Water temperature poll failure (device has no DHW sensor) now logged at debug level only instead of warning every poll
+- Hot Water temperature endpoint error (`HTTP_BAD_REQUEST`) suppressed from normal logs — disable the feature if your installation has no DHW sensor
 
 ## [2.0.1] - 2026-05-30
 

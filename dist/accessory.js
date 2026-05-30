@@ -103,6 +103,10 @@ class NefitEasyAccessory {
                 return this.hotWaterActive;
             })
                 .onSet((value) => this.handleSetHotWater(value));
+            // Mark as not responding until first poll confirms actual state
+            this.hotWaterService
+                .getCharacteristic(Characteristic.On)
+                .updateValue(false);
             this.log.info('Feature enabled: Hot Water switch');
         }
         // ── Manual Mode Switch ────────────────────────────────────────────────────
@@ -317,7 +321,8 @@ class NefitEasyAccessory {
             }
         }
         catch (err) {
-            this.log.warn(`Hot water temperature poll failed: ${err.message}`);
+            // Device may not have a DHW temperature sensor — log once at debug level only
+            this.dbg(`Hot water temperature not available: ${err.message}`);
         }
     }
     // ─── Status application ───────────────────────────────────────────────────────
@@ -459,17 +464,27 @@ class NefitEasyAccessory {
     async handleSetHotWater(value) {
         const on = value;
         this.log.info(`Setting hot water: ${on ? 'on' : 'off'}`);
-        this.dbg(`PUT /dhwCircuits/dhw1/operationMode { value: "${on ? 'on' : 'off'}" }`);
         if (!this.connected || !this.client) {
             throw new this.api.hap.HapStatusError(-70402 /* this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE */);
         }
+        // Try standard value first; some installations use "clock" instead of "on"
+        const onValue = 'on';
+        const offValue = 'off';
+        this.dbg(`PUT /dhwCircuits/dhw1/operationMode { value: "${on ? onValue : offValue}" }`);
         try {
-            await this.client.put('/dhwCircuits/dhw1/operationMode', { value: on ? 'on' : 'off' });
+            await this.client.put('/dhwCircuits/dhw1/operationMode', { value: on ? onValue : offValue });
             this.hotWaterActive = on;
             this.log.info(`Hot water set to ${on ? 'on' : 'off'}`);
         }
         catch (err) {
-            this.log.error(`Failed to set hot water: ${err.message}`);
+            const msg = err.message;
+            this.log.error(`Failed to set hot water: ${msg}`);
+            // Snap switch back to reflect actual state
+            setTimeout(() => {
+                this.hotWaterService
+                    ?.getCharacteristic(this.api.hap.Characteristic.On)
+                    .updateValue(this.hotWaterActive);
+            }, 500);
             throw new this.api.hap.HapStatusError(-70402 /* this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE */);
         }
     }
