@@ -2,6 +2,11 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.1.2] - 2026-05-30
+
+### Fixed
+- Removed `onSet` handler for `TargetHeatingCoolingState` entirely — matching the original `homebridge-nefit-easy` reference plugin exactly. With `validValues:[AUTO]` HomeKit should not send SET for other values; having an `onSet` that rejected or corrected them was causing the bounce-to-Off behaviour on every HomeKit state restore
+
 ## [2.1.1] - 2026-05-30
 
 ### Fixed

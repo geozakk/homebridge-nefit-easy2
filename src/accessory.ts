@@ -150,10 +150,7 @@ export class NefitEasyAccessory implements AccessoryPlugin {
     this.thermostatService
       .getCharacteristic(Characteristic.TargetHeatingCoolingState)
       .setProps({ validValues: [Characteristic.TargetHeatingCoolingState.AUTO] })
-      .onGet(() => Characteristic.TargetHeatingCoolingState.AUTO)
-      .onSet(() => {
-        throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.READ_ONLY_CHARACTERISTIC);
-      });
+      .onGet(() => Characteristic.TargetHeatingCoolingState.AUTO);
 
     this.thermostatService
       .getCharacteristic(Characteristic.TemperatureDisplayUnits)
