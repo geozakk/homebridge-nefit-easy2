@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
-    "prepublishOnly": "npm run build"
+    "prepare": "test -d dist || npm run build"
   },
   "keywords": [
     "homebridge-plugin",
