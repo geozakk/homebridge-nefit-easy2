@@ -3,6 +3,7 @@ export declare class NefitEasyAccessory implements AccessoryPlugin {
     private readonly log;
     private readonly config;
     private readonly api;
+    private readonly debugEnabled;
     private readonly thermostatService;
     private readonly informationService;
     private client;
@@ -15,6 +16,7 @@ export declare class NefitEasyAccessory implements AccessoryPlugin {
     private pollTimer;
     constructor(log: Logging, config: AccessoryConfig, api: API);
     getServices(): Service[];
+    private dbg;
     private createClient;
     private connect;
     private scheduleReconnect;

@@ -38,6 +38,13 @@
         "minimum": 10,
         "maximum": 600,
         "description": "How often (in seconds) to poll the thermostat for updates. Default is 60 seconds."
+      },
+      "debug": {
+        "title": "Enable Debug Logging",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Log detailed debug information to the Homebridge log. Turn off in normal use."
       }
     }
   },
@@ -51,7 +58,7 @@
       "type": "fieldset",
       "title": "Advanced",
       "expandable": true,
-      "items": ["pollingInterval"]
+      "items": ["pollingInterval", "debug"]
     }
   ]
 }
