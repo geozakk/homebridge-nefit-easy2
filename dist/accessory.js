@@ -367,7 +367,13 @@ class NefitEasyAccessory {
                 .getCharacteristic(Characteristic.TargetHeatingCoolingState)
                 .updateValue(newTargetState);
         }
-        this.log.info(`Status — current: ${inHouseTemp}°C, setpoint: ${setpoint}°C, burner: ${burnerOn}, mode: ${newTargetState === 1 ? 'Heat' : 'Off'}`);
+        this.dbg(`BAI=${v.BAI}, burnerOn=${burnerOn}, targetMode=${newTargetState === 1 ? 'Heat' : 'Off'}`);
+        const statusChanged = inHouseTemp !== this.currentTemperature ||
+            setpoint !== this.targetTemperature ||
+            burnerOn !== (this.currentHeatingState === Characteristic.CurrentHeatingCoolingState.HEAT);
+        if (statusChanged) {
+            this.log.info(`Status changed — current: ${inHouseTemp}°C, setpoint: ${setpoint}°C, burner: ${burnerOn ? 'on' : 'off'}`);
+        }
         // ── Hot Water ─────────────────────────────────────────────────────────────
         if (this.feat.hotWater && this.hotWaterService) {
             const hwOn = v.DHW === 'on';

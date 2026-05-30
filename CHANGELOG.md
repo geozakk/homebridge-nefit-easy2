@@ -2,6 +2,12 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.0.2] - 2026-05-30
+
+### Fixed
+- Status line now only logs when temperature, setpoint, or burner state actually changes — eliminates repetitive log noise during stable conditions
+- Removed internal `BAI` field from normal log output; it now appears only when debug logging is enabled
+
 ## [2.0.1] - 2026-05-30
 
 ### Added
