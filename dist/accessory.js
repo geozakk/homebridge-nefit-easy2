@@ -82,15 +82,13 @@ class NefitEasyAccessory {
         });
         this.thermostatService
             .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-            .setProps({ validValues: [Characteristic.TargetHeatingCoolingState.AUTO] })
-            .onGet(() => Characteristic.TargetHeatingCoolingState.AUTO)
+            .setProps({ validValues: [0, 1] })
+            .onGet(() => Characteristic.TargetHeatingCoolingState.HEAT)
             .onSet(() => {
-            // Push AUTO back immediately so HomeKit cannot latch onto any other value.
-            setTimeout(() => {
-                this.thermostatService
-                    .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-                    .updateValue(Characteristic.TargetHeatingCoolingState.AUTO);
-            }, 100);
+            // The Nefit Easy has no true off — always correct back to HEAT immediately.
+            this.thermostatService
+                .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+                .updateValue(Characteristic.TargetHeatingCoolingState.HEAT);
         });
         this.thermostatService
             .getCharacteristic(Characteristic.TemperatureDisplayUnits)
@@ -366,6 +364,10 @@ class NefitEasyAccessory {
                 .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
                 .updateValue(newCurrentState);
         }
+        // Always keep TargetHeatingCoolingState = HEAT so the temperature wheel stays active.
+        this.thermostatService
+            .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+            .updateValue(Characteristic.TargetHeatingCoolingState.HEAT);
         this.dbg(`BAI=${v.BAI}, burnerOn=${burnerOn}`);
         const statusChanged = inHouseTemp !== this.currentTemperature ||
             setpoint !== this.targetTemperature ||

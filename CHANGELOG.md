@@ -2,6 +2,13 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.0.9] - 2026-05-30
+
+### Fixed
+- `TargetHeatingCoolingState` is now locked to **Heat** (not Auto) — `validValues:[AUTO]` did not hide Off/Heat/Cool from the iOS mode picker so the thermostat could still be set to Off, which disabled the temperature wheel entirely
+- Mode is corrected back to Heat immediately (synchronously, no setTimeout) on any SET attempt, preventing the ping-pong flash seen in v2.0.8
+- Every poll now pushes `Heat` to HomeKit so any stale cached `Off` state is corrected within one poll cycle rather than persisting until a restart
+
 ## [2.0.8] - 2026-05-30
 
 ### Fixed
