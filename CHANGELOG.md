@@ -2,6 +2,11 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.0.8] - 2026-05-30
+
+### Fixed
+- `TargetHeatingCoolingState` now immediately pushes **Auto** back to HomeKit when any SET is received — prevents HomeKit from latching onto a cached Off/Heat value and showing "Off" on the thermostat dial even after upgrading to v2.0.7
+
 ## [2.0.7] - 2026-05-30
 
 ### Changed

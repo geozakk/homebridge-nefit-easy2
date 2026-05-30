@@ -84,7 +84,14 @@ class NefitEasyAccessory {
             .getCharacteristic(Characteristic.TargetHeatingCoolingState)
             .setProps({ validValues: [Characteristic.TargetHeatingCoolingState.AUTO] })
             .onGet(() => Characteristic.TargetHeatingCoolingState.AUTO)
-            .onSet(() => { });
+            .onSet(() => {
+            // Push AUTO back immediately so HomeKit cannot latch onto any other value.
+            setTimeout(() => {
+                this.thermostatService
+                    .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+                    .updateValue(Characteristic.TargetHeatingCoolingState.AUTO);
+            }, 100);
+        });
         this.thermostatService
             .getCharacteristic(Characteristic.TemperatureDisplayUnits)
             .onGet(() => Characteristic.TemperatureDisplayUnits.CELSIUS)
