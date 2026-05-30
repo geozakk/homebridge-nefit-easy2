@@ -2,6 +2,13 @@
 
 All notable changes to `homebridge-bosch-nefit-easy` will be documented here.
 
+## [2.0.3] - 2026-05-30
+
+### Fixed
+- Temperature SET now tries three endpoint paths in order (`temperatureRoomManual`, `manualTempOverride/setpoint`, `temperatureManual`) to handle different Nefit Easy firmware versions
+- Each endpoint attempt is logged separately so failures can be diagnosed precisely
+- GET probe and PUT are now in separate try/catch blocks — a failed probe no longer silently swallows the PUT error
+
 ## [2.0.2] - 2026-05-30
 
 ### Fixed

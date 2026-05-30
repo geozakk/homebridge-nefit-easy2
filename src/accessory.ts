@@ -510,21 +510,54 @@ export class NefitEasyAccessory implements AccessoryPlugin {
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
+  // Different Nefit Easy firmware versions use different endpoints — try each in order.
+  private static readonly TEMP_ENDPOINTS = [
+    '/heatingCircuits/hc1/temperatureRoomManual',
+    '/heatingCircuits/hc1/manualTempOverride/setpoint',
+    '/heatingCircuits/hc1/temperatureManual',
+  ];
+
   private async handleSetTargetTemperature(value: CharacteristicValue): Promise<void> {
     const temp = value as number;
     this.log.info(`Setting target temperature to ${temp}°C`);
-    this.dbg(`PUT /heatingCircuits/hc1/temperatureRoomManual { value: ${temp} }`);
     if (!this.connected || !this.client) {
       throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
-    try {
-      await this.client.put('/heatingCircuits/hc1/temperatureRoomManual', { value: temp });
-      this.targetTemperature = temp;
-      this.log.info(`Target temperature set to ${temp}°C`);
-    } catch (err) {
-      this.log.error(`Failed to set temperature: ${(err as Error).message}`);
-      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+
+    for (const endpoint of NefitEasyAccessory.TEMP_ENDPOINTS) {
+      // Probe GET to confirm endpoint exists and learn value format
+      let probeValue: string | number | undefined;
+      try {
+        this.dbg(`Probing GET ${endpoint}…`);
+        const probe = await this.client.get(endpoint);
+        this.dbg(`Probe result: ${JSON.stringify(probe)}`);
+        probeValue = probe?.value;
+      } catch (probeErr) {
+        const e = probeErr as Error & { response?: { statusCode?: number } };
+        this.dbg(`GET ${endpoint} failed: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'}) — trying next`);
+        continue;
+      }
+
+      // Mirror the exact value type the device returned (string vs number)
+      const payload = typeof probeValue === 'string'
+        ? { value: temp.toFixed(1) }
+        : { value: temp };
+
+      try {
+        this.dbg(`PUT ${endpoint} ${JSON.stringify(payload)}`);
+        await this.client.put(endpoint, payload);
+        this.targetTemperature = temp;
+        this.log.info(`Target temperature set to ${temp}°C via ${endpoint}`);
+        return;
+      } catch (putErr) {
+        const e = putErr as Error & { response?: { statusCode?: number; body?: unknown } };
+        this.log.warn(`PUT ${endpoint} failed: ${e.message} (HTTP ${e.response?.statusCode ?? 'unknown'}) — trying next`);
+        this.dbg(`Response body: ${JSON.stringify(e.response?.body)}`);
+      }
     }
+
+    this.log.error('Failed to set temperature — all endpoints exhausted. Enable debug logging and share the output for diagnosis.');
+    throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
   }
 
   private async handleSetTargetHeatingState(value: CharacteristicValue): Promise<void> {
