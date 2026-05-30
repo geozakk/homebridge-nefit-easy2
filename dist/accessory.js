@@ -32,7 +32,7 @@ class NefitEasyAccessory {
         this.dbg('Debug logging enabled');
         this.dbg(`Config: serialNumber=${this.config.serialNumber}, pollingInterval=${this.config.pollingInterval ?? 60}s`);
         const { Service, Characteristic } = this.api.hap;
-        this.log.info('Initializing NefitEasy2 accessory...');
+        this.log.info('Initializing BoschNefitEasy accessory...');
         this.informationService = new Service.AccessoryInformation()
             .setCharacteristic(Characteristic.Manufacturer, 'Bosch / Nefit')
             .setCharacteristic(Characteristic.Model, 'Nefit Easy')

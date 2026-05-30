@@ -69,7 +69,7 @@ export class NefitEasyAccessory implements AccessoryPlugin {
 
     const { Service, Characteristic } = this.api.hap;
 
-    this.log.info('Initializing NefitEasy2 accessory...');
+    this.log.info('Initializing BoschNefitEasy accessory...');
 
     this.informationService = new Service.AccessoryInformation()
       .setCharacteristic(Characteristic.Manufacturer, 'Bosch / Nefit')
